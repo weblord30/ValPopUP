@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purple Valentine 💜</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  height:100vh;
+  font-family:'Poppins',sans-serif;
+  background:linear-gradient(270deg,#4b0082,#7b2cbf,#9d4edd,#c77dff);
+  background-size:800% 800%;
+  animation:bgMove 15s ease infinite;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:white;
+  overflow:hidden;
+}
+
+@keyframes bgMove{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+
+.app{
+  width:min(900px,90%);
+  backdrop-filter:blur(18px);
+  background:rgba(255,255,255,0.08);
+  border-radius:30px;
+  padding:45px;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  text-align:center;
+}
+
+h1{
+  font-size:2.7rem;
+  font-weight:700;
+}
+
+.typewriter{
+  margin-top:20px;
+  min-height:90px;
+  font-size:1.25rem;
+  opacity:.95;
+  line-height:1.6;
+}
+
+.countdown{
+  margin:25px 0;
+  font-size:1.1rem;
+  letter-spacing:2px;
+}
+
+.question{
+  font-size:2rem;
+  margin:25px 0;
+}
+
+.buttons{
+  display:flex;
+  gap:20px;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+button{
+  border:none;
+  padding:14px 34px;
+  font-size:18px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:.25s;
+}
+
+button:hover{
+  transform:scale(1.1);
+}
+
+.yes{
+  background:#e0aaff;
+  color:#240046;
+  font-weight:600;
+  box-shadow:0 0 20px rgba(224,170,255,.7);
+}
+
+.no{
+  background:#240046;
+  color:white;
+}
+
+.result{
+  margin-top:25px;
+  font-size:1.8rem;
+}
+
+.emoji{
+  position:absolute;
+  bottom:-40px;
+  font-size:26px;
+  animation:float 5s linear forwards;
+}
+
+@keyframes float{
+  to{
+    transform:translateY(-800px);
+    opacity:0;
+  }
+}
+
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<h1>Diya — My Purple 💜</h1>
+<div class="typewriter" id="typewriter"></div>
+<div class="countdown" id="countdown"></div>
+
+<div class="question">Will you be my Valentine?</div>
+
+<div class="buttons">
+<button class="yes" onclick="sendAnswer('YES')">YES 💜</button>
+<button class="no" id="noBtn">NO 💔</button>
+</div>
+
+<div class="result" id="result"></div>
+
+</div>
+
+<script>
+
+////////////////////
+// TYPEWRITER
+////////////////////
+
+const message = "From the moment you came into my life, everything started to feel brighter and more meaningful. Your smile brings a kind of happiness that’s hard to explain, and being around you makes ordinary days feel special. I appreciate your kindness, your energy, and the way you make me want to be a better person. Purple, you truly mean a lot to me, and every memory we create is something I treasure.";
+
+let i=0;
+
+function typeWriter(){
+  if(i<message.length){
+    document.getElementById("typewriter").textContent += message.charAt(i);
+    i++;
+    setTimeout(typeWriter,30);
+  }
+}
+
+typeWriter();
+
+////////////////////
+// COUNTDOWN
+////////////////////
+
+function updateCountdown(){
+  const now = new Date();
+  let year = now.getFullYear();
+  let valentines = new Date(year,1,14);
+
+  if(now > valentines){
+    valentines = new Date(year+1,1,14);
+  }
+
+  const diff = valentines - now;
+
+  const days = Math.floor(diff/(1000*60*60*24));
+  const hours = Math.floor((diff/(1000*60*60))%24);
+  const mins = Math.floor((diff/60000)%60);
+
+  document.getElementById("countdown").textContent =
+    `Countdown to Valentine's: ${days}d ${hours}h ${mins}m`;
+}
+
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+////////////////////
+// MOVING NO BUTTON
+////////////////////
+
+const noBtn = document.getElementById('noBtn');
+
+noBtn.addEventListener('mouseover',()=>{
+  const x = Math.random()*300-150;
+  const y = Math.random()*200-100;
+  noBtn.style.transform = `translate(${x}px,${y}px)`;
+});
+
+noBtn.addEventListener('click',()=>sendAnswer('NO'));
+
+////////////////////
+// EMOJIS
+////////////////////
+
+function createEmoji(symbol,count){
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className='emoji';
+    el.textContent=symbol;
+    el.style.left=Math.random()*window.innerWidth+'px';
+    el.style.fontSize=(20+Math.random()*40)+'px';
+    document.body.appendChild(el);
+
+    setTimeout(()=>el.remove(),5000);
+  }
+}
+
+////////////////////
+// SEND RESPONSE
+////////////////////
+
+function sendAnswer(answer){
+  fetch("https://formspree.io/f/xjgebnke",{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:"Valentine response: "+answer})
+  });
+
+  const result=document.getElementById('result');
+
+  if(answer==='YES'){
+    result.textContent="You just made this the best day ever 💜";
+    createEmoji('💜',40);
+    createEmoji('✨',30);
+    createEmoji('🎆',40);
+  }
+  else{
+    result.textContent="I'll keep trying to earn that yes 😊";
+    createEmoji('💔',30);
+    createEmoji('🎈',20);
+  }
+}
+
+</script>
+</body>
+</html>
