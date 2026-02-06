@@ -20,6 +20,7 @@ body{
   align-items:center;
   color:white;
   overflow:hidden;
+  cursor:pointer;
 }
 
 @keyframes bgMove{
@@ -36,12 +37,11 @@ body{
   padding:45px;
   box-shadow:0 20px 60px rgba(0,0,0,.35);
   text-align:center;
+  position:relative;
+  z-index:2;
 }
 
-h1{
-  font-size:2.7rem;
-  font-weight:700;
-}
+h1{font-size:2.7rem;font-weight:700}
 
 .typewriter{
   margin-top:20px;
@@ -51,23 +51,11 @@ h1{
   line-height:1.6;
 }
 
-.countdown{
-  margin:25px 0;
-  font-size:1.1rem;
-  letter-spacing:2px;
-}
+.countdown{margin:25px 0;font-size:1.1rem;letter-spacing:2px}
 
-.question{
-  font-size:2rem;
-  margin:25px 0;
-}
+.question{font-size:2rem;margin:25px 0}
 
-.buttons{
-  display:flex;
-  gap:20px;
-  justify-content:center;
-  flex-wrap:wrap;
-}
+.buttons{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
 
 button{
   border:none;
@@ -78,9 +66,7 @@ button{
   transition:.25s;
 }
 
-button:hover{
-  transform:scale(1.1);
-}
+button:hover{transform:scale(1.1)}
 
 .yes{
   background:#e0aaff;
@@ -89,15 +75,9 @@ button:hover{
   box-shadow:0 0 20px rgba(224,170,255,.7);
 }
 
-.no{
-  background:#240046;
-  color:white;
-}
+.no{background:#240046;color:white}
 
-.result{
-  margin-top:25px;
-  font-size:1.8rem;
-}
+.result{margin-top:25px;font-size:1.8rem}
 
 .emoji{
   position:absolute;
@@ -107,18 +87,93 @@ button:hover{
 }
 
 @keyframes float{
-  to{
-    transform:translateY(-800px);
-    opacity:0;
-  }
+  to{transform:translateY(-800px);opacity:0}
+}
+
+/* cinematic flash */
+.flash{
+  position:fixed;
+  inset:0;
+  background:white;
+  opacity:0;
+  pointer-events:none;
+  z-index:5;
+}
+
+.flash.active{
+  animation:flash .6s ease;
+}
+
+@keyframes flash{
+  0%{opacity:0}
+  40%{opacity:.9}
+  100%{opacity:0}
+}
+
+/* hearts following cursor */
+.heart{
+  position:fixed;
+  font-size:18px;
+  pointer-events:none;
+  animation:heartFloat 1s forwards;
+}
+
+@keyframes heartFloat{
+  to{transform:translateY(-40px);opacity:0}
+}
+
+/* love letter */
+.letter{
+  position:fixed;
+  inset:0;
+  background:rgba(20,0,40,.95);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:40px;
+  opacity:0;
+  pointer-events:none;
+  transition:.6s;
+  z-index:10;
+}
+
+.letter.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.letter-box{
+  max-width:600px;
+  background:rgba(255,255,255,.08);
+  padding:40px;
+  border-radius:25px;
+  backdrop-filter:blur(10px);
 }
 
 </style>
 </head>
 
 <body>
-<div class="app">
 
+<!-- MUSIC -->
+<audio id="music" loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_115b9bce13.mp3?filename=romantic-background-112191.mp3" type="audio/mpeg">
+</audio>
+
+<div class="flash" id="flash"></div>
+
+<div class="letter" id="letter">
+  <div class="letter-box">
+    <h2>For You, My Purple 💜</h2>
+    <p style="margin-top:15px;line-height:1.7">
+      Saying yes today means the world to me. Having you in my life has brought so much happiness, laughter, and meaning. You are someone I deeply appreciate, and every moment we share is a memory I value. I'm excited for all the beautiful moments still ahead of us.
+    </p>
+    <button style="margin-top:25px" onclick="closeLetter()">Close</button>
+  </div>
+</div>
+
+<div class="app">
 <h1>Diya — My Purple 💜</h1>
 <div class="typewriter" id="typewriter"></div>
 <div class="countdown" id="countdown"></div>
@@ -131,19 +186,24 @@ button:hover{
 </div>
 
 <div class="result" id="result"></div>
-
 </div>
 
 <script>
 
 ////////////////////
+// AUTOPLAY MUSIC (starts on first tap for mobile safety)
+////////////////////
+
+document.body.addEventListener('click',()=>{
+  document.getElementById('music').play().catch(()=>{});
+},{once:true});
+
+////////////////////
 // TYPEWRITER
 ////////////////////
 
-const message = "From the moment you came into my life, everything started to feel brighter and more meaningful. Your smile brings a kind of happiness that’s hard to explain, and being around you makes ordinary days feel special. I appreciate your kindness, your energy, and the way you make me want to be a better person. Purple, you truly mean a lot to me, and every memory we create is something I treasure.";
-
+const message = "From the moment you came into my life, everything started to feel brighter and more meaningful. Your smile brings a happiness that's hard to explain, and being around you makes ordinary days feel special. Purple, you truly mean so much to me.";
 let i=0;
-
 function typeWriter(){
   if(i<message.length){
     document.getElementById("typewriter").textContent += message.charAt(i);
@@ -159,22 +219,19 @@ typeWriter();
 ////////////////////
 
 function updateCountdown(){
-  const now = new Date();
-  let year = now.getFullYear();
-  let valentines = new Date(year,1,14);
+  const now=new Date();
+  let year=now.getFullYear();
+  let valentines=new Date(year,1,14);
 
-  if(now > valentines){
-    valentines = new Date(year+1,1,14);
-  }
+  if(now>valentines){valentines=new Date(year+1,1,14);}
 
-  const diff = valentines - now;
+  const diff=valentines-now;
+  const days=Math.floor(diff/(1000*60*60*24));
+  const hours=Math.floor((diff/(1000*60*60))%24);
+  const mins=Math.floor((diff/60000)%60);
 
-  const days = Math.floor(diff/(1000*60*60*24));
-  const hours = Math.floor((diff/(1000*60*60))%24);
-  const mins = Math.floor((diff/60000)%60);
-
-  document.getElementById("countdown").textContent =
-    `Countdown to Valentine's: ${days}d ${hours}h ${mins}m`;
+  document.getElementById("countdown").textContent=
+  `Countdown to Valentine's: ${days}d ${hours}h ${mins}m`;
 }
 
 setInterval(updateCountdown,1000);
@@ -184,15 +241,28 @@ updateCountdown();
 // MOVING NO BUTTON
 ////////////////////
 
-const noBtn = document.getElementById('noBtn');
-
+const noBtn=document.getElementById('noBtn');
 noBtn.addEventListener('mouseover',()=>{
-  const x = Math.random()*300-150;
-  const y = Math.random()*200-100;
-  noBtn.style.transform = `translate(${x}px,${y}px)`;
+  const x=Math.random()*300-150;
+  const y=Math.random()*200-100;
+  noBtn.style.transform=`translate(${x}px,${y}px)`;
 });
-
 noBtn.addEventListener('click',()=>sendAnswer('NO'));
+
+////////////////////
+// CURSOR HEARTS
+////////////////////
+
+document.addEventListener('mousemove',(e)=>{
+  const heart=document.createElement('div');
+  heart.className='heart';
+  heart.textContent='💜';
+  heart.style.left=e.clientX+'px';
+  heart.style.top=e.clientY+'px';
+  document.body.appendChild(heart);
+
+  setTimeout(()=>heart.remove(),1000);
+});
 
 ////////////////////
 // EMOJIS
@@ -206,9 +276,20 @@ function createEmoji(symbol,count){
     el.style.left=Math.random()*window.innerWidth+'px';
     el.style.fontSize=(20+Math.random()*40)+'px';
     document.body.appendChild(el);
-
     setTimeout(()=>el.remove(),5000);
   }
+}
+
+////////////////////
+// LOVE LETTER
+////////////////////
+
+function showLetter(){
+  document.getElementById('letter').classList.add('show');
+}
+
+function closeLetter(){
+  document.getElementById('letter').classList.remove('show');
 }
 
 ////////////////////
@@ -225,10 +306,13 @@ function sendAnswer(answer){
   const result=document.getElementById('result');
 
   if(answer==='YES'){
+    document.getElementById('flash').classList.add('active');
     result.textContent="You just made this the best day ever 💜";
-    createEmoji('💜',40);
-    createEmoji('✨',30);
-    createEmoji('🎆',40);
+    createEmoji('💜',50);
+    createEmoji('✨',40);
+    createEmoji('🎉',40);
+
+    setTimeout(showLetter,700);
   }
   else{
     result.textContent="I'll keep trying to earn that yes 😊";
